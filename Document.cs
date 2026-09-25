@@ -232,50 +232,111 @@ namespace net.vieapps.Components.Utility.Epub
 		public void AddMetaDCItem(string name, string value)
 			=> this._metadata.AddDCItem(name, value);
 
-		string AddEntry(string path, string type)
-		{
-			var id = this.GetNextID("id");
-			this._manifest.AddItem(id, path, type);
-			return id;
-		}
+        string AddEntry(string id, string path, string type, string[] properties)
+        {
+            this._manifest.AddItem(id, path, type, properties);
+            return id;
+        }
+        string AddEntry(string id, string path, string type)
+        {
+            AddEntry(id, path, type, null);
+            return id;
+        }
 
-		string AddStylesheetEntry(string path)
-		{
-			var id = this.GetNextID("stylesheet");
-			this._manifest.AddItem(id, path, "text/css");
-			return id;
-		}
+        string AddEntry(string path, string type)
+        {
+            return AddEntry(path, type, (string[]) null);
+        }
 
-		string AddXhtmlEntry(string path, bool linear = true)
-		{
-			var id = this.GetNextID("html");
-			this._manifest.AddItem(id, path, "application/xhtml+xml");
-			this._spine.AddItemRef(id, linear);
-			return id;
-		}
+        string AddEntry(string path, string type, string[] properties)
+        {
+            return AddEntry(this.GetNextID("id"), path, type, properties);
+        }
 
-		string AddImageEntry(string path)
-		{
-			var id = this.GetNextID("img");
-			var contentType = string.Empty;
-			var filepath = path.ToLower();
+        string AddStylesheetEntry(string path)
+        {
+            return AddStylesheetEntry(path, "text/css");
+        }
 
-			if (filepath.EndsWith(".jpg") || filepath.EndsWith(".jpeg"))
-				contentType = "image/jpeg";
-			else if (filepath.EndsWith(".png"))
-				contentType = "image/png";
-			else if (filepath.EndsWith(".gif"))
-				contentType = "image/gif";
-			else if (filepath.EndsWith(".bmp"))
-				contentType = "image/bmp";
-			else if (filepath.EndsWith(".svg"))
-				contentType = "image/svg+xml";
+        string AddStylesheetEntry(string path, string contentType)
+        {
+            return AddStylesheetEntry(path, contentType, null);
+        }
+        string AddStylesheetEntry(string path, string[] properties)
+        {
+            return AddStylesheetEntry(path, "text/css", properties);
+        }
 
-			this._manifest.AddItem(id, path, contentType);
-			return id;
-		}
+        string AddStylesheetEntry(string path, string contentType, string[] properties)
+        {
+            return AddEntry(this.GetNextID("stylesheet"), path, contentType, properties);
+        }
 
-		void CopyFile(string path, string epubPath)
+        string AddXhtmlEntry(string path, bool linear = true)
+        {
+            return AddXhtmlEntry(path, (string[]) null, linear);
+        }
+
+        string AddXhtmlEntry(string path, string[] properties, bool linear = true)
+        {
+            return AddXhtmlEntry(path, "application/xhtml+xml", properties, linear);
+        }
+
+        string AddXhtmlEntry(string path, string contentType, bool linear = true)
+        {
+            return AddXhtmlEntry(path, contentType, (string[])null, linear);
+        }
+
+        string AddXhtmlEntry(string path, string contentType, string[] properties, bool linear = true)
+        {
+            var id = this.GetNextID("html");
+            AddEntry(id, path, contentType, properties);
+            this._spine.AddItemRef(id, linear);
+            return id;
+        }
+
+        string ImageMimeFromExtension(string path)
+        {
+            var contentType = string.Empty;
+            var filepath = path.ToLower();
+
+            if (filepath.EndsWith(".jpg") || filepath.EndsWith(".jpeg"))
+                contentType = "image/jpeg";
+            else if (filepath.EndsWith(".png"))
+                contentType = "image/png";
+            else if (filepath.EndsWith(".gif"))
+                contentType = "image/gif";
+            else if (filepath.EndsWith(".bmp"))
+                contentType = "image/bmp";
+            else if (filepath.EndsWith(".svg"))
+                contentType = "image/svg+xml";
+
+			return contentType;
+        }
+
+        string AddImageEntry(string path)
+        {
+            return AddImageEntry(path, ImageMimeFromExtension(path));
+        }
+
+        string AddImageEntry(string path, string[] properties)
+        {
+            return AddImageEntry(path, ImageMimeFromExtension(path), properties);
+        }
+
+        string AddImageEntry(string path, string contentType)
+        {
+            return AddImageEntry(path, contentType, null);
+        }
+
+        string AddImageEntry(string path, string contentType, string[] properties)
+        {
+            var id = this.GetNextID("img");
+            AddEntry(id, path, contentType, properties);
+            return id;
+        }
+
+        void CopyFile(string path, string epubPath)
 		{
 			var fullPath = Path.Combine(this.GetOpfDirectory(), epubPath);
 			this.EnsureDirectoryExists(fullPath);
@@ -302,120 +363,430 @@ namespace net.vieapps.Components.Utility.Epub
 			var fullPath = Path.Combine(this.GetOpfDirectory(), epubPath);
 			this.EnsureDirectoryExists(fullPath);
 			File.WriteAllText(fullPath, content, Encoding.UTF8);
-		}
+        }
 
-		/// <summary>
-		/// Add image to document's contents
-		/// </summary>
-		/// <param name="path">Path to source image file</param>
-		/// <param name="epubPath">Path to image file in EPUB</param>
-		/// <returns>id of newly created element</returns>
-		public string AddImageFile(string path, string epubPath)
-		{
-			this.CopyFile(path, epubPath);
-			return AddImageEntry(epubPath);
-		}
+        /// <summary>
+        /// Add image to document's contents
+        /// </summary>
+        /// <param name="path">Path to source image file</param>
+        /// <param name="epubPath">Path to image file in EPUB</param>
+        /// <returns>id of newly created element</returns>
+        public string AddImageFile(string path, string epubPath)
+        {
+            this.CopyFile(path, epubPath);
+            return AddImageEntry(epubPath);
+        }
 
-		/// <summary>
-		/// Add CSS file to document's contents
-		/// </summary>
-		/// <param name="path">path to source CSS file</param>
-		/// <param name="epubPath">path to destination file in EPUB</param>
-		/// <returns>id of newly created element</returns>
-		public string AddStylesheetFile(string path, string epubPath)
-		{
-			this.CopyFile(path, epubPath);
-			return this.AddStylesheetEntry(epubPath);
-		}
+        /// <summary>
+        /// Add image to document's contents
+        /// </summary>
+        /// <param name="path">Path to source image file</param>
+        /// <param name="epubPath">Path to image file in EPUB</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <returns>id of newly created element</returns>
+        public string AddImageFile(string path, string epubPath, string[] properties)
+        {
+            this.CopyFile(path, epubPath);
+            return AddImageEntry(epubPath, properties);
+        }
 
-		/// <summary>
-		/// Add primary or auxiliary (like notes) XHTML file to document's content
-		/// </summary>
-		/// <param name="path">path to source file</param>
-		/// <param name="epubPath">path in epub</param>
-		/// <param name="primary">true for primary document, false for auxiliary</param>
-		/// <returns>id of newly created element</returns>
-		public string AddXhtmlFile(string path, string epubPath, bool primary = true)
-		{
-			this.CopyFile(path, epubPath);
-			return this.AddXhtmlEntry(epubPath, primary);
-		}
+        /// <summary>
+        /// Add image to document's contents
+        /// </summary>
+        /// <param name="path">Path to source image file</param>
+        /// <param name="epubPath">Path to image file in EPUB</param>
+        /// <param name="contentType">The MIME content type of the image file</param>
+        /// <returns>id of newly created element</returns>
+        public string AddImageFile(string path, string epubPath, string contentType)
+        {
+            return AddImageFile(epubPath, contentType, (string[])null);
+        }
 
-		/// <summary>
-		/// Add generic file to document's contents
-		/// </summary>
-		/// <param name="path">source file path</param>
-		/// <param name="epubPath">path in EPUB</param>
-		/// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
-		/// <returns>id of newly added file</returns>
-		public string AddFile(string path, string epubPath, string mediaType)
-		{
-			this.CopyFile(path, epubPath);
-			return this.AddEntry(epubPath, mediaType);
-		}
+        /// <summary>
+        /// Add image to document's contents
+        /// </summary>
+        /// <param name="path">Path to source image file</param>
+        /// <param name="epubPath">Path to image file in EPUB</param>
+        /// <param name="contentType">The MIME content type of the image file</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <returns>id of newly created element</returns>
+        public string AddImageFile(string path, string epubPath, string contentType, string[] properties)
+        {
+            this.CopyFile(path, epubPath);
+            return AddImageEntry(epubPath, contentType, properties);
+        }
 
-		// Data versions of AddNNN functions
-		/// <summary>
-		/// Add image file to document with specified content. Image type
-		/// is detected by filename's extension
-		/// </summary>
-		/// <param name="epubPath">path in EPUB</param>
-		/// <param name="content">file content</param>
-		/// <returns>id of newly added file</returns>
-		public string AddImageData(string epubPath, byte[] content)
-		{
-			this.WriteFile(epubPath, content);
-			return this.AddImageEntry(epubPath);
-		}
+        /// <summary>
+        /// Add CSS file to document's contents
+        /// </summary>
+        /// <param name="path">path to source CSS file</param>
+        /// <param name="epubPath">path to destination file in EPUB</param>
+        /// <returns>id of newly created element</returns>
+        public string AddStylesheetFile(string path, string epubPath)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddStylesheetEntry(epubPath);
+        }
 
-		/// <summary>
-		/// Add CSS file to document with specified content.
-		/// </summary>
-		/// <param name="epubPath">path in EPUB</param>
-		/// <param name="content">file content</param>
-		/// <returns>id of newly added file</returns>
-		public string AddStylesheetData(string epubPath, string content)
-		{
-			this.WriteFile(epubPath, content);
-			return this.AddStylesheetEntry(epubPath);
-		}
+        /// <summary>
+        /// Add CSS file to document's contents
+        /// </summary>
+        /// <param name="path">path to source CSS file</param>
+        /// <param name="epubPath">path to destination file in EPUB</param>
+        /// <param name="contentType">The MIME content type of the image file</param>
+        /// <returns>id of newly created element</returns>
+        public string AddStylesheetFile(string path, string epubPath, string contentType)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddStylesheetEntry(epubPath, contentType);
+        }
 
-		/// <summary>
-		/// Add primary or auxiliary XHTML file to document with specified content.
-		/// </summary>
-		/// <param name="epubPath">path in EPUB</param>
-		/// <param name="content">file content</param>
-		/// <param name="primary">true if file is primary, false if auxiliary</param>
-		/// <returns>identifier of added file</returns>
-		public string AddXhtmlData(string epubPath, string content, bool primary)
-		{
-			this.WriteFile(epubPath, content);
-			return this.AddXhtmlEntry(epubPath, primary);
-		}
+        /// <summary>
+        /// Add CSS file to document's contents
+        /// </summary>
+        /// <param name="path">path to source CSS file</param>
+        /// <param name="epubPath">path to destination file in EPUB</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <returns>id of newly created element</returns>
+        public string AddStylesheetFile(string path, string epubPath, string[] properties)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddStylesheetEntry(epubPath, properties);
+        }
 
-		/// <summary>
-		/// Add primary  XHTML file to document with specified content.
-		/// </summary>
-		/// <param name="epubPath">path in EPUB</param>
-		/// <param name="content">file contents</param>
-		/// <returns>identifier of added file</returns>
-		public string AddXhtmlData(string epubPath, string content)
-			=> this.AddXhtmlData(epubPath, content, true);
+        /// <summary>
+        /// Add CSS file to document's contents
+        /// </summary>
+        /// <param name="path">path to source CSS file</param>
+        /// <param name="epubPath">path to destination file in EPUB</param>
+        /// <param name="contentType">The MIME content type of the image file</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <returns>id of newly created element</returns>
+        public string AddStylesheetFile(string path, string epubPath, string contentType, string[] properties)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddStylesheetEntry(epubPath, contentType, properties);
+        }
 
-		/// <summary>
-		/// Add generic file to document with specified content
-		/// </summary>
-		/// <param name="epubPath">path in EPUB</param>
-		/// <param name="content">file content</param>
-		/// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
-		/// <returns>identifier of added file</returns>
-		public string AddData(string epubPath, byte[] content, string mediaType)
-		{
-			this.WriteFile(epubPath, content);
-			return this.AddEntry(epubPath, mediaType);
-		}
+        /// <summary>
+        /// Add primary or auxiliary (like notes) XHTML file to document's content
+        /// </summary>
+        /// <param name="path">path to source file</param>
+        /// <param name="epubPath">path in epub</param>
+        /// <param name="contentType">The MIME content type of the image file</param>
+        /// <param name="primary">true for primary document, false for auxiliary</param>
+        /// <returns>id of newly created element</returns>
+        public string AddXhtmlFile(string path, string epubPath, string contentType, bool primary = true)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddXhtmlEntry(epubPath, contentType, primary);
+        }
 
-		void WriteOpf(string opfFilePath)
+        /// <summary>
+        /// Add primary or auxiliary (like notes) XHTML file to document's content
+        /// </summary>
+        /// <param name="path">path to source file</param>
+        /// <param name="epubPath">path in epub</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="primary">true for primary document, false for auxiliary</param>
+        /// <returns>id of newly created element</returns>
+        public string AddXhtmlFile(string path, string epubPath, string[] properties, bool primary = true)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddXhtmlEntry(epubPath, properties, primary);
+        }
+
+        /// <summary>
+        /// Add primary or auxiliary (like notes) XHTML file to document's content
+        /// </summary>
+        /// <param name="path">path to source file</param>
+        /// <param name="epubPath">path in epub</param>
+        /// <param name="contentType">The MIME content type of the image file</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="primary">true for primary document, false for auxiliary</param>
+        /// <returns>id of newly created element</returns>
+        public string AddXhtmlFile(string path, string epubPath, string contentType, string[] properties, bool primary = true)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddXhtmlEntry(epubPath, contentType, properties, primary);
+        }
+
+        /// <summary>
+        /// Add primary or auxiliary (like notes) XHTML file to document's content
+        /// </summary>
+        /// <param name="path">path to source file</param>
+        /// <param name="epubPath">path in epub</param>
+        /// <param name="primary">true for primary document, false for auxiliary</param>
+        /// <returns>id of newly created element</returns>
+        public string AddXhtmlFile(string path, string epubPath, bool primary = true)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddXhtmlEntry(epubPath, primary);
+        }
+
+        /// <summary>
+        /// Add generic file to document's contents
+        /// </summary>
+        /// <param name="path">source file path</param>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <returns>id of newly added file</returns>
+        public string AddFile(string path, string epubPath, string mediaType)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddEntry(epubPath, mediaType);
+        }
+
+        /// <summary>
+        /// Add generic file to document's contents
+        /// </summary>
+        /// <param name="path">source file path</param>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <returns>id of newly added file</returns>
+        public string AddFile(string path, string epubPath, string mediaType, string[] properties)
+        {
+            this.CopyFile(path, epubPath);
+            return this.AddEntry(epubPath, mediaType, properties);
+        }
+
+        // Data versions of AddNNN functions
+        /// <summary>
+        /// Add image file to document with specified content. Image type
+        /// is detected by filename's extension
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddImageData(string epubPath, byte[] content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddImageEntry(epubPath);
+        }
+
+        // Data versions of AddNNN functions
+        /// <summary>
+        /// Add image file to document with specified content. Image type
+        /// is detected by filename's extension
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddImageData(string epubPath, string mediaType, byte[] content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddImageEntry(epubPath, mediaType);
+        }
+
+        // Data versions of AddNNN functions
+        /// <summary>
+        /// Add image file to document with specified content. Image type
+        /// is detected by filename's extension
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddImageData(string epubPath, string[] properties, byte[] content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddImageEntry(epubPath, properties);
+        }
+
+        // Data versions of AddNNN functions
+        /// <summary>
+        /// Add image file to document with specified content. Image type
+        /// is detected by filename's extension
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddImageData(string epubPath, string mediaType, string[] properties, byte[] content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddImageEntry(epubPath, mediaType, properties);
+        }
+
+        /// <summary>
+        /// Add CSS file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddStylesheetData(string epubPath, string content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddStylesheetEntry(epubPath);
+        }
+
+        /// <summary>
+        /// Add CSS file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddStylesheetData(string epubPath, string mediaType, string content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddStylesheetEntry(epubPath, mediaType);
+        }
+
+        /// <summary>
+        /// Add CSS file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddStylesheetData(string epubPath, string[] properties, string content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddStylesheetEntry(epubPath, properties);
+        }
+
+        /// <summary>
+        /// Add CSS file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file content</param>
+        /// <returns>id of newly added file</returns>
+        public string AddStylesheetData(string epubPath, string mediaType, string[] properties, string content)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddStylesheetEntry(epubPath, mediaType, properties);
+        }
+
+        /// <summary>
+        /// Add primary or auxiliary XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="content">file content</param>
+        /// <param name="primary">true if file is primary, false if auxiliary</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string content, bool primary)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddXhtmlEntry(epubPath, primary);
+        }
+
+        /// <summary>
+        /// Add primary  XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="content">file contents</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string content)
+            => this.AddXhtmlData(epubPath, content, true);
+
+        /// <summary>
+        /// Add primary or auxiliary XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="content">file content</param>
+        /// <param name="primary">true if file is primary, false if auxiliary</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string mediaType, string content, bool primary)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddXhtmlEntry(epubPath, mediaType, primary);
+        }
+
+        /// <summary>
+        /// Add primary  XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="content">file contents</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string mediaType, string content)
+            => this.AddXhtmlData(epubPath, mediaType, content, true);
+
+        /// <summary>
+        /// Add primary or auxiliary XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file content</param>
+        /// <param name="primary">true if file is primary, false if auxiliary</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string[] properties, string content, bool primary)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddXhtmlEntry(epubPath, properties, primary);
+        }
+
+        /// <summary>
+        /// Add primary  XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file contents</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string[] properties, string content)
+            => this.AddXhtmlData(epubPath, properties, content, true);
+
+        /// <summary>
+        /// Add primary or auxiliary XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file content</param>
+        /// <param name="primary">true if file is primary, false if auxiliary</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string mediaType, string[] properties, string content, bool primary)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddXhtmlEntry(epubPath, mediaType, properties, primary);
+        }
+
+        /// <summary>
+        /// Add primary  XHTML file to document with specified content.
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <param name="content">file contents</param>
+        /// <returns>identifier of added file</returns>
+        public string AddXhtmlData(string epubPath, string mediaType, string[] properties, string content)
+            => this.AddXhtmlData(epubPath, mediaType, properties, content, true);
+
+        /// <summary>
+        /// Add generic file to document with specified content
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="content">file content</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <returns>identifier of added file</returns>
+        public string AddData(string epubPath, byte[] content, string mediaType)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddEntry(epubPath, mediaType);
+        }
+
+        /// <summary>
+        /// Add generic file to document with specified content
+        /// </summary>
+        /// <param name="epubPath">path in EPUB</param>
+        /// <param name="content">file content</param>
+        /// <param name="mediaType">MIME media-type, e.g. "application/octet-stream"</param>
+        /// <param name="properties">EPUB Manifest properties for this image</param>
+        /// <returns>identifier of added file</returns>
+        public string AddData(string epubPath, byte[] content, string mediaType, string[] properties)
+        {
+            this.WriteFile(epubPath, content);
+            return this.AddEntry(epubPath, mediaType, properties);
+        }
+
+        void WriteOpf(string opfFilePath)
 		{
 			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "2.0"), new XAttribute("unique-identifier", "BookId"));
 			packageElement.Add(this._metadata.ToElement());
