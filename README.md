@@ -2,7 +2,9 @@
 
 A simple library for generating .EPUB documents on .NET Standard 2.x/.NET Core 2.x+
 
+<!--
 [![NuGet](https://img.shields.io/nuget/v/VIEApps.Components.Utility.Epub.svg)](https://www.nuget.org/packages/VIEApps.Components.Utility.Epub)
+-->
 
 ```csharp
 using net.vieapps.Components.Utility.Epub;
