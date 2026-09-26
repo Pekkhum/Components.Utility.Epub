@@ -788,7 +788,7 @@ namespace net.vieapps.Components.Utility.Epub
 
         void WriteOpf(string opfFilePath)
 		{
-			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "2.0"), new XAttribute("unique-identifier", "BookId"));
+			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "3.0"), new XAttribute("unique-identifier", "BookId"));
 			packageElement.Add(this._metadata.ToElement());
 			packageElement.Add(this._manifest.ToElement());
 			packageElement.Add(this._spine.ToElement());
@@ -856,21 +856,22 @@ namespace net.vieapps.Components.Utility.Epub
 					}
 					catch { }
 
-				// zip the temp directory as .EPUB file
-				ZipFile.CreateFromDirectory(this.GetTempDirectory(), filePath, CompressionLevel.Optimal, false, Encoding.UTF8);
+                using (ZipArchive zipAr = ZipFile.Open(filePath, ZipArchiveMode.Create))
+                {
+                    // Add MIME type => for working with Apple iBooks and EPUB 3.x standard.
+                    // The standard requires it to be uncompressed and the first entry in the file table.
+                    ZipArchiveEntry entry = zipAr.CreateEntry("mimetype", CompressionLevel.NoCompression);
+                    using (var writer = new StreamWriter(entry.Open()))
+                    {
+                        writer.WriteLine("application/epub+zip");
+                        writer.Close();
+                    }
 
-				// add MIME type => for working with Apple iBooks
-				using (var zipArchive = ZipFile.Open(filePath, ZipArchiveMode.Update))
-				{
-					var entry = zipArchive.CreateEntry("mimetype", CompressionLevel.NoCompression);
-					using (var writer = new StreamWriter(entry.Open()))
-					{
-						writer.WriteLine("application/epub+zip");
-					}
-				}
+                    addFilesInDirectory(zipAr, this.GetTempDirectory() + Path.DirectorySeparatorChar, this.GetTempDirectory());
+                }
 
-				// callback
-				onSuccess?.Invoke(filePath);
+                // callback
+                onSuccess?.Invoke(filePath);
 			}
 			catch (Exception ex)
 			{
@@ -889,5 +890,18 @@ namespace net.vieapps.Components.Utility.Epub
 				catch { }
 			}
 		}
+
+        internal void addFilesInDirectory(ZipArchive zipAr, string relativeToPath, string directoryPath)
+        {
+            foreach (var file in Directory.GetFiles(directoryPath))
+            {
+                zipAr.CreateEntryFromFile(file, file.Replace(relativeToPath, "").Replace(Path.DirectorySeparatorChar, '/'), CompressionLevel.Optimal);
+            }
+
+            foreach (var dir in Directory.GetDirectories(directoryPath))
+            {
+                addFilesInDirectory(zipAr, relativeToPath, dir);
+            }
+        }
 	}
 }
