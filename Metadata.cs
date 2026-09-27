@@ -52,6 +52,7 @@ namespace net.vieapps.Components.Utility.Epub
             }
         }
 
+        private static readonly string iso8601_1FormatString = "yyyy-MM-ddTHH:mm:ssZ";
         private static readonly XName opfMeta = Document.OpfNS + "meta";
         internal readonly Document currentDoc;
         internal readonly Dictionary<string, int> _ids = new Dictionary<string, int>();
@@ -115,7 +116,7 @@ namespace net.vieapps.Components.Utility.Epub
             certifiedByItem.SetAttribute("refines", conformsToRefinesId);
             string certifiedByRefinesId = "#" + certifiedByItem.GetAttribute("id");
 
-            Item certifiedDateItem = AddItem(certificationDate.ToString("yyyy-MM-ddThh:mm:ssZ"));
+            Item certifiedDateItem = AddItem(certificationDate.ToString(iso8601_1FormatString));
             certifiedDateItem.SetAttribute("property", "dcterms:date");
             certifiedDateItem.SetAttribute("refines", certifiedByRefinesId);
 
@@ -253,7 +254,7 @@ namespace net.vieapps.Components.Utility.Epub
 
         internal void AddModifiedDateTime(DateTime dt)
         {
-            Item modItem = AddItem(dt.ToString("yyyy-MM-ddThh:mm:ssZ"));
+            Item modItem = AddItem(dt.ToString(iso8601_1FormatString));
             modItem.SetAttribute("property", "dcterms:modified");
         }
         internal void AddModifiedDateTime()
@@ -261,7 +262,7 @@ namespace net.vieapps.Components.Utility.Epub
 
         internal void AddPublicationDateTime(DateTime dt)
         {
-            Item modItem = AddItem(dt.ToString("yyyy-MM-ddThh:mm:ssZ"), Document.DcNS + "date");
+            Item modItem = AddItem(dt.ToString(iso8601_1FormatString), Document.DcNS + "date");
         }
 
         internal void AddSeriesInfo(string seriesName, string positionInSeries = null, string seriesType = null, string seriesTypeScheme = null)
