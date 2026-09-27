@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
@@ -71,14 +72,52 @@ namespace net.vieapps.Components.Utility.Epub
 
 		internal XElement ToElement()
 		{
-			XNamespace dc = "http://purl.org/dc/elements/1.1/";
-			XNamespace opf = "http://www.idpf.org/2007/opf";
-			var element = new XElement(Document.OpfNS + "metadata", new XAttribute(XNamespace.Xmlns + "dc", dc), new XAttribute(XNamespace.Xmlns + "opf", opf));
+            XNamespace aps = "https://schema.org/CreativeWork";
+            var element = new XElement(Document.OpfNS + "metadata",
+                new XAttribute(XNamespace.Xmlns + "dc", Document.DcNS),
+                new XAttribute(XNamespace.Xmlns + "opf", Document.OpfNS),
+                new XAttribute(XNamespace.Xmlns + "aps", Document.apsNS)
+                );
 			this._items.ForEach(item => element.Add(item.ToElement()));
 			return element;
-		}
+        }
 
-		internal void AddCreator(string name, string role)
+        internal void AddAccessibilityProperty(string name, string value)
+        {
+            Item accesibilityItem = AddItem(value);
+            accesibilityItem.SetAttribute("property", "schema:" + name);
+        }
+
+        internal void AddAccessibilityProperty(string name, string[] values)
+        {
+            foreach (var value in values)
+            {
+                AddAccessibilityProperty(name, value);
+            }
+        }
+
+        internal void AddAccessibilityCertifiedBy(string certifiedBy)
+        {
+            Item accesibilityItem = AddItem(certifiedBy);
+            accesibilityItem.SetAttribute("property", "a11y:certifiedBy");
+        }
+
+        internal void AddAccessibilityCertifierCredential(string certifierCredential)
+        {
+            Item accesibilityItem = AddItem(certifierCredential);
+            accesibilityItem.SetAttribute("property", "a11y:certifierCredential");
+        }
+
+        internal void AddAccessibilityCertifierReport(string certifierReport)
+        {
+            Item accesibilityItem = AddItem(certifierReport);
+            accesibilityItem.SetAttribute("property", "a11y:certifierReport");
+        }
+
+        internal void AddAccessibilityConformsTo(string conformanceStandard)
+            => AddItem(conformanceStandard, Document.DcNS + "conformsTo");
+
+        internal void AddCreator(string name, string role)
 		{
             Item creatorItem = AddItem(name, Document.DcNS + "creator");
             string refinesId = "#" + creatorItem.GetAttribute("id");

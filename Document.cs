@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using static net.vieapps.Components.Utility.Epub.Metadata;
 #endregion
 
 #if !SIGN
@@ -21,8 +22,9 @@ namespace net.vieapps.Components.Utility.Epub
     {
         internal readonly static XNamespace OpfNS = "http://www.idpf.org/2007/opf";
         internal readonly static XNamespace DcNS = "http://purl.org/dc/elements/1.1/";
+        internal readonly static XNamespace apsNS = "https://schema.org/CreativeWork";
 
-		readonly Metadata _metadata;
+        readonly Metadata _metadata;
 		readonly Manifest _manifest;
 		readonly Spine _spine;
 		readonly Guide _guide;
@@ -111,11 +113,56 @@ namespace net.vieapps.Components.Utility.Epub
 			return id;
 		}
 
-		/// <summary>
-		/// Add author of the document
-		/// </summary>
-		/// <param name="author">Human-readable full name</param>
-		public void AddAuthor(string author)
+
+        /// <summary>
+        /// Adds a Schema.org Accessibility Metadata property beginning "schema:" into the metadata with the provided name and value.
+        /// </summary>
+        /// <param name="name">The name of the accessibility property, without "schema:"</param>
+        /// <param name="value">The value of the accessibility property</param>
+        public void AddAccessibilityProperty(string name, string value)
+            => this._metadata.AddAccessibilityProperty(name, value);
+
+        /// <summary>
+        /// Adds a Schema.org Accessibility Metadata property beginning "schema:" into the metadata with the provided name for each value.
+        /// </summary>
+        /// <param name="name">The name of the accessibility properties, without "schema:"</param>
+        /// <param name="values">The values of the accessibility properties</param>
+        public void AddAccessibilityProperty(string name, string[] values)
+            => this._metadata.AddAccessibilityProperty(name, values);
+
+        /// <summary>
+        /// Who has provided the accessibility certification.
+        /// </summary>
+        /// <param name="certifiedBy">A string containing the accessibility certifier's name</param>
+        public void AddAccessibilityCertifiedBy(string certifiedBy)
+            => this._metadata.AddAccessibilityCertifiedBy(certifiedBy);
+
+        /// <summary>
+        /// Credentials of the accessibility certification provider.
+        /// </summary>
+        /// <param name="certifierCredential">A string representation of the accessibility certification provider's credentials</param>
+        public void AddAccessibilityCertifierCredential(string certifierCredential)
+            => this._metadata.AddAccessibilityCertifierReport(certifierCredential);
+
+        /// <summary>
+        /// Certifier's accessibility report.
+        /// </summary>
+        /// <param name="certifierReport">A reference to the certifier report</param>
+        public void AddAccessibilityCertifierReport(string certifierReport)
+            => this._metadata.AddAccessibilityCertifierReport(certifierReport);
+
+        /// <summary>
+        /// Standard with which this document conforms.
+        /// </summary>
+        /// <param name="conformanceStandard">A string representation of the conformance standard</param>
+        public void AddAccessibilityConformsTo(string conformanceStandard)
+            => this._metadata.AddAccessibilityConformsTo(conformanceStandard);
+
+        /// <summary>
+        /// Add author of the document
+        /// </summary>
+        /// <param name="author">Human-readable full name</param>
+        public void AddAuthor(string author)
 		{
 			this._metadata.AddAuthor(author);
 			this._ncx.AddAuthor(author);
