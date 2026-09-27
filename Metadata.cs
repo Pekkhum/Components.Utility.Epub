@@ -103,7 +103,8 @@ namespace net.vieapps.Components.Utility.Epub
             string certifiedBy,
             DateTime certificationDate,
             string certifierCredentials = null,
-            string certifierReportUri = null)
+            string certifierReportUri = null,
+            string certifierReportMimeType = "text/html")
         {
             Item conformsToItem = AddItem(conformsTo);
             conformsToItem.SetAttribute("property", "dcterms:conformsTo");
@@ -129,8 +130,9 @@ namespace net.vieapps.Components.Utility.Epub
             {
                 Item reportUriItem = AddItem(null, Document.OpfNS + "link");
                 reportUriItem.SetAttribute("rel", "a11y:certifierReport");
-                reportUriItem.SetAttribute("refines", certifiedByRefinesId);
+                reportUriItem.SetAttribute("refines", certifiedByRefinesId); 
                 reportUriItem.SetAttribute("href", certifierReportUri);
+                reportUriItem.SetAttribute("media-type", certifierReportMimeType);
             }
         }
 

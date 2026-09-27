@@ -138,12 +138,14 @@ namespace net.vieapps.Components.Utility.Epub
         /// <param name="certificationDate"></param>
         /// <param name="certifierCredentials">A string representation of the accessibility certification provider's credentials</param>
         /// <param name="certifierReportUri">A URI reference to the certifier report</param>
+        /// <param name="certifierReportMimeType">The mime-type of the certifier report</param>
         public void AddAccessibilityCertification(string conformsTo,
             string certifiedBy,
             DateTime certificationDate,
             string certifierCredentials = null,
-            string certifierReportUri = null)
-            => this._metadata.AddAccessibilityCertification(conformsTo, certifiedBy, certificationDate, certifierCredentials, certifierReportUri);
+            string certifierReportUri = null,
+            string certifierReportMimeType = "text/html")
+            => this._metadata.AddAccessibilityCertification(conformsTo, certifiedBy, certificationDate, certifierCredentials, certifierReportUri, certifierReportMimeType);
 
         /// <summary>
         /// Add author of the document
