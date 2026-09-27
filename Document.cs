@@ -138,7 +138,7 @@ namespace net.vieapps.Components.Utility.Epub
         /// <param name="certificationDate"></param>
         /// <param name="certifierCredentials">A string representation of the accessibility certification provider's credentials</param>
         /// <param name="certifierReportUri">A URI reference to the certifier report</param>
-        void AddAccessibilityCertification(string conformsTo,
+        public void AddAccessibilityCertification(string conformsTo,
             string certifiedBy,
             DateTime certificationDate,
             string certifierCredentials = null,
