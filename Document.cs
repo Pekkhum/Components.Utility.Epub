@@ -806,7 +806,7 @@ namespace net.vieapps.Components.Utility.Epub
 
         void WriteOpf(string opfFilePath)
 		{
-			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "3.0"), new XAttribute("unique-identifier", "BookId"), new XAttribute(XNamespace.Xmlns + "lang", "en"));
+			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "3.0"), new XAttribute("unique-identifier", "BookId"), new XAttribute(XNamespace.Xml + "lang", "en"));
 			packageElement.Add(this._metadata.ToElement());
 			packageElement.Add(this._manifest.ToElement());
 			packageElement.Add(this._spine.ToElement());
