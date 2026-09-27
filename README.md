@@ -19,11 +19,11 @@ epub.AddMetaItem("dc:contributor", contributor);
 epub.AddMetaItem("book:Original", original);
 epub.AddStylesheetData("style.css", stylesheet);
 
-var coverImageId = epub.AddImageData("cover.jpg", coverImageBinaryData);
+var coverImageId = epub.AddImageData("cover.jpg", coverImageBinaryData, new string[] { "cover-image" });
 epub.AddMetaItem("cover", coverImageId);
 
 var pageTemplate = @"<!DOCTYPE html>
-	<html xmlns=""http://www.w3.org/1999/xhtml"">
+	<html xmlns=""http://www.w3.org/1999/xhtml"" xmlns:epub=""http://www.idpf.org/2007/ops"">
 		<head>
 			<title>{0}</title>
 			<meta http-equiv=""Content-Type"" content=""text/html; charset=utf-8""/>
@@ -50,6 +50,8 @@ for (var index = 0; index < pages.Count; index++)
 	var content = pages[index];
 
 	epub.AddXhtmlData(name, pageTemplate.Replace("{0}", index < navs.Count ? navs[index] : coverTitle).Replace("{1}", content));
+	// EPUB 3 systems ignore these, but for backward compatibility to EPUB 2 systems,
+	// they should be present with a sequential reading order with have no gaps.
 	epub.AddNavPoint(index < navs.Count ? navs[index] : coverTitle + " - " + (index + 1).ToString(), name, index + 1);
 }
 

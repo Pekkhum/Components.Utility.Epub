@@ -38,6 +38,7 @@ namespace net.vieapps.Components.Utility.Epub
         {
             var doc = new XDocument(new XDocumentType("ncx", "-//NISO//DTD ncx 2005-1//EN", "http://www.daisy.org/z3986/2005/ncx-2005-1.dtd", null));
 			var ncx = new XElement(NcxNS + "ncx");
+            ncx.SetAttributeValue("version", "2005-1");
             ncx.Add(CreateHeadElement());
 
             // create doc data
