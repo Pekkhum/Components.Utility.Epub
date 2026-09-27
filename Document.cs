@@ -192,18 +192,34 @@ namespace net.vieapps.Components.Utility.Epub
 		public void AddTranslator(string name)
 			=> this._metadata.AddTranslator(name);
 
-		/// <summary>
-		/// Add document contributor
-		/// </summary>
-		/// <param name="name">Human-readable full name</param>
-		public void AddContributor(string name)
-			=> this._metadata.AddContributor(name);
+        /// <summary>
+        /// Add creator of content within the document
+        /// </summary>
+        /// <param name="name">Human-readable full name</param>
+        /// <param name="role">Role code from the MARC Code List for Creators</param>
+        public void AddCreator(string name, string role)
+            => this._metadata.AddCreator(name, role);
 
-		/// <summary>
-		/// Add document subject: phrase or list of keywords
-		/// </summary>
-		/// <param name="subject">Document's subject</param>
-		public void AddSubject(string subject)
+        /// <summary>
+        /// Add document contributor
+        /// </summary>
+        /// <param name="name">Human-readable full name</param>
+        public void AddContributor(string name)
+            => this._metadata.AddContributor(name);
+
+        /// <summary>
+        /// Add document contributor
+        /// </summary>
+        /// <param name="name">Human-readable full name</param>
+        /// <param name="role">Role code from the MARC Code List for Creators</param>
+        public void AddContributor(string name, string role)
+            => this._metadata.AddContributor(name, role);
+
+        /// <summary>
+        /// Add document subject: phrase or list of keywords
+        /// </summary>
+        /// <param name="subject">Document's subject</param>
+        public void AddSubject(string subject)
 			=> this._metadata.AddSubject(subject);
 
 		/// <summary>
