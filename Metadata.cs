@@ -16,12 +16,12 @@ namespace net.vieapps.Components.Utility.Epub
         internal class Item
         {
             private readonly XName _tagName;
-            private readonly string content;
+            private readonly string _content;
             private readonly IDictionary<XName, string> attributes = new Dictionary<XName, string>();
 
             internal Item(string tagContent, XName tagName)
             {
-                this.content = tagContent;
+                this._content = tagContent;
                 this._tagName = tagName;
             }
 
@@ -38,7 +38,10 @@ namespace net.vieapps.Components.Utility.Epub
             internal XElement ToElement()
             {
                 var element = new XElement(_tagName);
-                element.SetValue(content);
+                if (_content != null)
+                {
+                    element.SetValue(_content);
+                }
 
                 foreach (var attr in attributes)
                 {
@@ -99,7 +102,7 @@ namespace net.vieapps.Components.Utility.Epub
         internal void AddAccessibilityCertification(string conformsTo,
             string certifiedBy,
             DateTime certificationDate,
-            string certifierCredentials=null,
+            string certifierCredentials = null,
             string certifierReportUri = null)
         {
             Item conformsToItem = AddItem(conformsTo);
@@ -107,27 +110,27 @@ namespace net.vieapps.Components.Utility.Epub
             string conformsToRefinesId = "#" + conformsToItem.GetAttribute("id");
 
             Item certifiedByItem = AddItem(certifiedBy);
-            string certifiedByRefinesId = "#" + certifiedByItem.GetAttribute("id");
             certifiedByItem.SetAttribute("property", "a11y:certifiedBy");
             certifiedByItem.SetAttribute("refines", conformsToRefinesId);
+            string certifiedByRefinesId = "#" + certifiedByItem.GetAttribute("id");
 
             Item certifiedDateItem = AddItem(certificationDate.ToString("yyyy-MM-ddThh:mm:ssZ"));
             certifiedDateItem.SetAttribute("property", "dcterms:date");
-            certifiedByItem.SetAttribute("refines", certifiedByRefinesId);
+            certifiedDateItem.SetAttribute("refines", certifiedByRefinesId);
 
             if (!string.IsNullOrWhiteSpace(certifierCredentials))
             {
-                Item roleItem = AddItem(certifierCredentials);
-                roleItem.SetAttribute("refines", certifiedByRefinesId);
-                roleItem.SetAttribute("property", "a11y:certifierCredential");
+                Item credItem = AddItem(certifierCredentials);
+                credItem.SetAttribute("refines", certifiedByRefinesId);
+                credItem.SetAttribute("property", "a11y:certifierCredential");
             }
 
             if (!string.IsNullOrWhiteSpace(certifierReportUri))
             {
-                Item roleItem = AddItem(null, "link");
-                roleItem.SetAttribute("rel", "a11y:certifierReport");
-                roleItem.SetAttribute("refines", certifiedByRefinesId);
-                roleItem.SetAttribute("href", certifierReportUri);
+                Item reportUriItem = AddItem(null, Document.OpfNS + "link");
+                reportUriItem.SetAttribute("rel", "a11y:certifierReport");
+                reportUriItem.SetAttribute("refines", certifiedByRefinesId);
+                reportUriItem.SetAttribute("href", certifierReportUri);
             }
         }
 
