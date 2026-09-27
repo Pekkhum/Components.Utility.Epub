@@ -41,7 +41,7 @@ namespace net.vieapps.Components.Utility.Epub
 		/// </summary>
 		public Document()
 		{
-			this._metadata = new Metadata();
+			this._metadata = new Metadata(this);
 			this._manifest = new Manifest();
 			this._spine = new Spine();
 			this._guide = new Guide();
@@ -95,7 +95,7 @@ namespace net.vieapps.Components.Utility.Epub
 			return this._metaDirectory;
 		}
 
-		string GetNextID(string kind)
+		internal string GetNextID(string kind)
 		{
 			string id;
 			if (this._ids.Keys.Contains(kind))
@@ -806,7 +806,7 @@ namespace net.vieapps.Components.Utility.Epub
 
         void WriteOpf(string opfFilePath)
 		{
-			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "3.0"), new XAttribute("unique-identifier", "BookId"));
+			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "3.0"), new XAttribute("unique-identifier", "BookId"), new XAttribute(XNamespace.Xmlns + "lang", "en"));
 			packageElement.Add(this._metadata.ToElement());
 			packageElement.Add(this._manifest.ToElement());
 			packageElement.Add(this._spine.ToElement());

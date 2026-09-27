@@ -49,23 +49,13 @@ namespace net.vieapps.Components.Utility.Epub
         }
 
         private static readonly XName opfMeta = Document.OpfNS + "meta";
+        internal readonly Document currentDoc;
         internal readonly Dictionary<string, int> _ids = new Dictionary<string, int>();
 		readonly List<Item> _items = new List<Item>();
 
-        internal string GetNextID(string kind)
+        internal Metadata(Document doc)
         {
-            string id;
-            if (this._ids.Keys.Contains(kind))
-            {
-                this._ids[kind] += 1;
-                id = kind + this._ids[kind].ToString();
-            }
-            else
-            {
-                id = kind + "1";
-                this._ids[kind] = 1;
-            }
-            return id;
+            currentDoc = doc;
         }
 
         internal Item AddItem(string content)
@@ -74,7 +64,7 @@ namespace net.vieapps.Components.Utility.Epub
         internal Item AddItem(string content, XName tagName)
         {
             var item = new Item(content, tagName);
-            item.SetAttribute("id", GetNextID(tagName.LocalName));
+            item.SetAttribute("id", currentDoc.GetNextID(tagName.LocalName));
             this._items.Add(item);
             return item;
         }
