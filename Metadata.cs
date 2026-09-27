@@ -113,9 +113,12 @@ namespace net.vieapps.Components.Utility.Epub
             Item accesibilityItem = AddItem(certifierReport);
             accesibilityItem.SetAttribute("property", "a11y:certifierReport");
         }
-
+        
         internal void AddAccessibilityConformsTo(string conformanceStandard)
-            => AddItem(conformanceStandard, Document.DcNS + "conformsTo");
+        {
+            Item accesibilityItem = AddItem(conformanceStandard);
+            accesibilityItem.SetAttribute("property", "dcterms:conformsTo");
+        }
 
         internal void AddCreator(string name, string role)
 		{
