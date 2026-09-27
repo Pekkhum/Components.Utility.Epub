@@ -810,7 +810,10 @@ namespace net.vieapps.Components.Utility.Epub
 			packageElement.Add(this._metadata.ToElement());
 			packageElement.Add(this._manifest.ToElement());
 			packageElement.Add(this._spine.ToElement());
-			packageElement.Add(this._guide.ToElement());
+            if (this._guide.HasReferences())
+            {
+                packageElement.Add(this._guide.ToElement());
+            }
 			packageElement.Save(Path.Combine(this.GetOpfDirectory(), opfFilePath));
 		}
 

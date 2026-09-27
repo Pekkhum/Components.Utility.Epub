@@ -14,6 +14,11 @@ namespace net.vieapps.Components.Utility.Epub
 
 		internal Guide() => this._element = new XElement(Document.OpfNS + "guide");
 
+        internal bool HasReferences()
+        {
+            return this._element.HasElements;
+        }
+
 		internal void AddReference(string href, string type, string title = "")
         {
             var itemref = new XElement(Document.OpfNS + "reference", new XAttribute("href", href), new XAttribute("type", type), new XAttribute("title", title));
