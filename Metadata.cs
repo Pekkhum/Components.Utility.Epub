@@ -1,84 +1,83 @@
 ﻿#region Related components
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
-using System.Collections.Generic;
 #endregion
 
 namespace net.vieapps.Components.Utility.Epub
 {
 	internal class Metadata
 	{
-		internal class Item
-		{
-			private readonly string _name;
-			private readonly string _value;
+        internal class Item
+        {
+            private readonly XName _tagName;
+            private readonly string content;
+            private readonly IDictionary<XName, string> attributes = new Dictionary<XName, string>();
 
-			internal Item(string name, string value)
-			{
-				this._name = name;
-				this._value = value;
-			}
+            internal Item(string tagContent, XName tagName)
+            {
+                this.content = tagContent;
+                this._tagName = tagName;
+            }
 
-			internal XElement ToElement()
-			{
-				var element = new XElement(Document.OpfNS + "meta");
-				element.SetAttributeValue("name", this._name);
-				element.SetAttributeValue("content", this._value);
-				return element;
-			}
-		}
+            internal string GetAttribute(XName name)
+            {
+                return attributes[name];
+            }
 
-		internal class DCItem
-		{
-			readonly string _name;
-			readonly string _value;
+            internal void SetAttribute(XName name, string value)
+            {
+                attributes[name] = value;
+            }
 
-			readonly IDictionary<string, string> _attributes;
-			readonly IDictionary<string, string> _opfAttributes;
+            internal XElement ToElement()
+            {
+                var element = new XElement(_tagName);
+                element.SetValue(content);
 
-			internal DCItem(string name, string value)
-			{
-				this._name = name;
-				this._value = value;
-				this._attributes = new Dictionary<string, string>();
-				this._opfAttributes = new Dictionary<string, string>();
-			}
+                foreach (var attr in attributes)
+                {
 
-			internal void SetAttribute(string name, string value)
-				=> this._attributes.Add(name, value);
+                    element.SetAttributeValue(attr.Key, attr.Value);
+                }
+                return element;
+            }
+        }
 
-			internal void SetOpfAttribute(string name, string value)
-				=> this._opfAttributes.Add(name, value);
-
-			internal XElement ToElement()
-			{
-				var element = new XElement(Document.DcNS + this._name, this._value);
-				foreach (string key in this._opfAttributes.Keys)
-					element.SetAttributeValue(Document.OpfNS + key, this._opfAttributes[key]);
-				foreach (string key in this._attributes.Keys)
-					element.SetAttributeValue(key, this._attributes[key]);
-				return element;
-			}
-		}
-
+        private static readonly XName opfMeta = Document.OpfNS + "meta";
+        internal readonly Dictionary<string, int> _ids = new Dictionary<string, int>();
 		readonly List<Item> _items = new List<Item>();
-		readonly List<DCItem> _dcItems = new List<DCItem>();
 
-		internal Item AddItem(string name, string value)
-		{
-			var item = new Item(name, value);
-			this._items.Add(item);
-			return item;
-		}
+        internal string GetNextID(string kind)
+        {
+            string id;
+            if (this._ids.Keys.Contains(kind))
+            {
+                this._ids[kind] += 1;
+                id = kind + this._ids[kind].ToString();
+            }
+            else
+            {
+                id = kind + "1";
+                this._ids[kind] = 1;
+            }
+            return id;
+        }
 
-		internal DCItem AddDCItem(string name, string value)
-		{
-			var item = new DCItem(name, value);
-			this._dcItems.Add(item);
-			return item;
-		}
+        internal Item AddItem(string content)
+            => AddItem(content, opfMeta);
+
+        internal Item AddItem(string content, XName tagName)
+        {
+            var item = new Item(content, tagName);
+            item.SetAttribute("id", GetNextID(tagName.LocalName));
+            this._items.Add(item);
+            return item;
+        }
 
 		internal XElement ToElement()
 		{
@@ -86,62 +85,122 @@ namespace net.vieapps.Components.Utility.Epub
 			XNamespace opf = "http://www.idpf.org/2007/opf";
 			var element = new XElement(Document.OpfNS + "metadata", new XAttribute(XNamespace.Xmlns + "dc", dc), new XAttribute(XNamespace.Xmlns + "opf", opf));
 			this._items.ForEach(item => element.Add(item.ToElement()));
-			this._dcItems.ForEach(item => element.Add(item.ToElement()));
 			return element;
 		}
 
 		internal void AddCreator(string name, string role)
 		{
-			var item = this.AddDCItem("creator", name);
-			if (!string.IsNullOrWhiteSpace(role))
-				item.SetOpfAttribute("role", role);
-		}
+            Item creatorItem = AddItem(name, Document.DcNS + "creator");
+            string refinesId = "#" + creatorItem.GetAttribute("id");
 
-		internal void AddAuthor(string name) 
+			if (!string.IsNullOrWhiteSpace(role))
+            {
+                Item roleItem = AddItem(role);
+                roleItem.SetAttribute("refines", refinesId);
+                roleItem.SetAttribute("property", "role");
+                roleItem.SetAttribute("scheme", "marc:relators");
+            }
+        }
+
+		internal void AddCreator(string name)
+			=> AddCreator(name, null);
+
+
+        internal void AddAuthor(string name) 
 			=> this.AddCreator(name, "aut");
 
-		internal void AddTranslator(string name)
-			=> this.AddCreator(name, "trl");
+        internal void AddTranslator(string name)
+            => this.AddCreator(name, "trl");
 
-		internal void AddContributor(string name)
-			=> this.AddDCItem("contributor", name);
+        internal void AddArtist(string name)
+            => this.AddCreator(name, "art");
 
-		internal void AddSubject(string subject)
-			=> this.AddDCItem("subject", subject);
+        internal void AddContributor(string name, string role)
+        {
+            Item creatorItem = AddItem(name, Document.DcNS + "contributor");
+            string refinesId = "#" + creatorItem.GetAttribute("id");
 
-		internal void AddDescription(string description)
-			=> this.AddDCItem("description", description);
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                Item roleItem = AddItem(role);
+                roleItem.SetAttribute("refines", refinesId);
+                roleItem.SetAttribute("property", "role");
+                roleItem.SetAttribute("scheme", "marc:relators");
+            }
+        }
 
-		internal void AddType(string type)
-			=> this.AddDCItem("type", type);
+        internal void AddContributor(string name)
+			=> AddContributor(name, null);
 
-		internal void AddFormat(string format)
-			=> this.AddDCItem("format", format);
+        internal void AddSubject(string subject, string authority = null, string term = null)
+        {
+            Item creatorItem = AddItem(subject, Document.DcNS + "subject");
+            string refinesId = "#" + creatorItem.GetAttribute("id");
 
-		internal void AddLanguage(string language)
-			=> this.AddDCItem("language", language);
+            if (!string.IsNullOrWhiteSpace(authority))
+            {
+                Item roleItem = AddItem(authority);
+                roleItem.SetAttribute("refines", refinesId);
+                roleItem.SetAttribute("property", "authority");
+            }
 
-		internal void AddRelation(string relation)
-			=> this.AddDCItem("relation", relation);
+            if (!string.IsNullOrWhiteSpace(term))
+            {
+                Item roleItem = AddItem(term);
+                roleItem.SetAttribute("refines", refinesId);
+                roleItem.SetAttribute("property", "term");
+            }
+        }
 
-		internal void AddRights(string rights)
-			=> this.AddDCItem("rights", rights);
+        internal void AddDescription(string description)
+            => AddItem(description, Document.DcNS + "description");
 
-		internal void AddTitle(string title)
-			=> this.AddDCItem("title", title);
 
-		internal void AddPublisher(string publisher)
-			=> this.AddDCItem("publisher", publisher);
+        internal void AddType(string type)
+            => AddItem(type, Document.DcNS + "type");
 
-		internal void AddBookIdentifier(string id, string uuid, string scheme)
-		{
-			var item = this.AddDCItem("identifier", uuid);
-			item.SetAttribute("id", id);
-			if (!string.IsNullOrEmpty(scheme))
-				item.SetOpfAttribute("scheme", scheme);
+        internal void AddFormat(string format)
+            => AddItem(format, Document.DcNS + "format");
+
+        internal void AddLanguage(string language)
+            => AddItem(language, Document.DcNS + "language");
+
+        internal void AddRelation(string relation)
+            => AddItem(relation, Document.DcNS + "relation");
+
+        internal void AddRights(string rights)
+            => AddItem(rights, Document.DcNS + "rights");
+
+        internal void AddTitle(string title)
+            => AddItem(title, Document.DcNS + "title");
+
+        internal void AddPublisher(string publisher)
+            => AddItem(publisher, Document.DcNS + "publisher");
+
+        internal void AddBookIdentifier(string id, string uuid, string scheme)
+        {
+            Item creatorItem = AddItem(uuid, Document.DcNS + "identifier");
+            string refinesId = "#";
+            if (!string.IsNullOrWhiteSpace(id))
+            {
+                creatorItem.SetAttribute("id", id);
+                refinesId += id;
+            } else
+            {
+                refinesId += creatorItem.GetAttribute("id");
+            }
+
+            if (!string.IsNullOrWhiteSpace(scheme))
+            {
+                Item roleItem = AddItem(scheme);
+                roleItem.SetAttribute("refines", refinesId);
+                roleItem.SetAttribute("property", "identifier-type");
+            }
 		}
 
 		internal void AddBookIdentifier(string id, string uuid)
 			=> this.AddBookIdentifier(id, uuid, string.Empty);
-	}
+        internal void AddBookIdentifier(string uuid)
+            => AddBookIdentifier(string.Empty, uuid, string.Empty);
+    }
 }

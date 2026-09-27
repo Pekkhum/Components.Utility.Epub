@@ -18,9 +18,9 @@ namespace net.vieapps.Components.Utility.Epub
 	/// Represents an .EPUB document
 	/// </summary>
 	public class Document
-	{
-		internal readonly static XNamespace OpfNS = "http://www.idpf.org/2007/opf";
-		internal readonly static XNamespace DcNS = "http://purl.org/dc/elements/1.1/";
+    {
+        internal readonly static XNamespace OpfNS = "http://www.idpf.org/2007/opf";
+        internal readonly static XNamespace DcNS = "http://purl.org/dc/elements/1.1/";
 
 		readonly Metadata _metadata;
 		readonly Manifest _manifest;
@@ -222,7 +222,7 @@ namespace net.vieapps.Components.Utility.Epub
 		/// <param name="name">meta element name</param>
 		/// <param name="value">meta element value</param>
 		public void AddMetaItem(string name, string value)
-			=> this._metadata.AddItem(name, value);
+			=> this._metadata.AddItem(value, name);
 
 		/// <summary>
 		/// Add DC metadata
@@ -230,7 +230,7 @@ namespace net.vieapps.Components.Utility.Epub
 		/// <param name="name">meta element name</param>
 		/// <param name="value">meta element value</param>
 		public void AddMetaDCItem(string name, string value)
-			=> this._metadata.AddDCItem(name, value);
+			=> this._metadata.AddItem(value, Document.DcNS + name);
 
         string AddEntry(string id, string path, string type, string[] properties)
         {
@@ -863,7 +863,7 @@ namespace net.vieapps.Components.Utility.Epub
                     ZipArchiveEntry entry = zipAr.CreateEntry("mimetype", CompressionLevel.NoCompression);
                     using (var writer = new StreamWriter(entry.Open()))
                     {
-                        writer.WriteLine("application/epub+zip");
+                        writer.Write("application/epub+zip");
                         writer.Close();
                     }
 
