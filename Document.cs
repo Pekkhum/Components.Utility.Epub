@@ -57,6 +57,7 @@ namespace net.vieapps.Components.Utility.Epub
 			var uuid = $"urn:uuid:{Guid.NewGuid()}";
 			this._ncx.SetUid(uuid);
 			this._metadata.AddBookIdentifier("BookId", uuid);
+            this._metadata.AddModifiedDateTime();
 		}
 
 		/// <summary>
@@ -165,12 +166,22 @@ namespace net.vieapps.Components.Utility.Epub
 		public void AddDescription(string description)
 			=> this._metadata.AddDescription(description);
 
-		/// <summary>
-		/// Add terms describing general categories, functions, genres, or aggregation levels for content.
-		/// The advised best practice is to select a value from a controlled vocabulary.
-		/// </summary>
-		/// <param name="type">document type</param>
-		public void AddType(string type)
+        /// <summary>
+        /// Add teh series this work belongs to, as well as it's position in that series.
+        /// </summary>
+        /// <param name="seriesName">The name of the series, as it should be displayed</param>
+        /// <param name="positionInSeries">The position in the series as an integer, or series if decimal separated numbers (e.g. 1 or 2.2.1)</param>
+        /// <param name="seriesType">The type of series, which should be "series" or "set" unless a seriesTypeScheme is specified</param>
+        /// <param name="seriesTypeScheme">The specification of the list from which the series type value was selected</param>
+        public void AddSeriesInfo(string seriesName, string positionInSeries = null, string seriesType = null, string seriesTypeScheme = null)
+            => this._metadata.AddSeriesInfo(seriesName, positionInSeries, seriesType, seriesTypeScheme);
+
+        /// <summary>
+        /// Add terms describing general categories, functions, genres, or aggregation levels for content.
+        /// The advised best practice is to select a value from a controlled vocabulary.
+        /// </summary>
+        /// <param name="type">document type</param>
+        public void AddType(string type)
 			=> this._metadata.AddType(type);
 
 		/// <summary>
@@ -194,18 +205,25 @@ namespace net.vieapps.Components.Utility.Epub
 		public void AddRelation(string relation)
 			=> this._metadata.AddRelation(relation);
 
-		/// <summary>
-		/// Add a statement about rights, or a reference to one.
-		/// </summary>
-		/// <param name="rights">A statement about rights, or a reference to one</param>
-		public void AddRights(string rights)
-			=> this._metadata.AddRights(rights);
+        /// <summary>
+        /// Add a statement about rights, or a reference to one.
+        /// </summary>
+        /// <param name="rights">A statement about rights, or a reference to one</param>
+        public void AddRights(string rights)
+            => this._metadata.AddRights(rights);
 
-		/// <summary>
-		/// Add book identifier
-		/// </summary>
-		/// <param name="id">A string or number used to uniquely identify the resource</param>
-		public void AddBookIdentifier(string id)
+        /// <summary>
+        /// The date of publication, not the date of this EPUB's modification.
+        /// </summary>
+        /// <param name="dt">A DateTime representing when this work was published</param>
+        public void AddPublicationDateTime(DateTime dt)
+            => this._metadata.AddPublicationDateTime(dt);
+
+        /// <summary>
+        /// Add book identifier
+        /// </summary>
+        /// <param name="id">A string or number used to uniquely identify the resource</param>
+        public void AddBookIdentifier(string id)
 			=> this.AddBookIdentifier(id, string.Empty);
 
 		/// <summary>

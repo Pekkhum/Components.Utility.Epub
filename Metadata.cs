@@ -202,5 +202,43 @@ namespace net.vieapps.Components.Utility.Epub
 			=> this.AddBookIdentifier(id, uuid, string.Empty);
         internal void AddBookIdentifier(string uuid)
             => AddBookIdentifier(string.Empty, uuid, string.Empty);
+
+        internal void AddModifiedDateTime(DateTime dt)
+        {
+            Item modItem = AddItem(dt.ToString("yyyy-MM-ddThh:mm:ssZ"));
+            modItem.SetAttribute("property", "dcterms:modified");
+        }
+        internal void AddModifiedDateTime()
+            => AddModifiedDateTime(DateTime.UtcNow);
+
+        internal void AddPublicationDateTime(DateTime dt)
+        {
+            Item modItem = AddItem(dt.ToString("yyyy-MM-ddThh:mm:ssZ"), Document.DcNS + "date");
+        }
+
+        internal void AddSeriesInfo(string seriesName, string positionInSeries = null, string seriesType = null, string seriesTypeScheme = null)
+        {
+            Item collectionItem = AddItem(seriesName);
+            string refinesId = "#" + collectionItem.GetAttribute("id");
+            collectionItem.SetAttribute("property", "belongs-to-collection");
+
+            if (!string.IsNullOrWhiteSpace(positionInSeries))
+            {
+                Item posItem = AddItem(positionInSeries);
+                posItem.SetAttribute("refines", refinesId);
+                posItem.SetAttribute("property", "group-position");
+            }
+
+            if (!string.IsNullOrWhiteSpace(seriesType))
+            {
+                Item stItem = AddItem(seriesType);
+                stItem.SetAttribute("refines", refinesId);
+                stItem.SetAttribute("property", "collection-type");
+                if (!string.IsNullOrWhiteSpace(seriesTypeScheme))
+                {
+                    stItem.SetAttribute("scheme", seriesTypeScheme);
+                }
+            }
+        }
     }
 }
