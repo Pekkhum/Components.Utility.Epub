@@ -96,28 +96,39 @@ namespace net.vieapps.Components.Utility.Epub
             }
         }
 
-        internal void AddAccessibilityCertifiedBy(string certifiedBy)
+        internal void AddAccessibilityCertification(string conformsTo,
+            string certifiedBy,
+            DateTime certificationDate,
+            string certifierCredentials=null,
+            string certifierReportUri = null)
         {
-            Item accesibilityItem = AddItem(certifiedBy);
-            accesibilityItem.SetAttribute("property", "a11y:certifiedBy");
-        }
+            Item conformsToItem = AddItem(conformsTo);
+            conformsToItem.SetAttribute("property", "dcterms:conformsTo");
+            string conformsToRefinesId = "#" + conformsToItem.GetAttribute("id");
 
-        internal void AddAccessibilityCertifierCredential(string certifierCredential)
-        {
-            Item accesibilityItem = AddItem(certifierCredential);
-            accesibilityItem.SetAttribute("property", "a11y:certifierCredential");
-        }
+            Item certifiedByItem = AddItem(certifiedBy);
+            string certifiedByRefinesId = "#" + certifiedByItem.GetAttribute("id");
+            certifiedByItem.SetAttribute("property", "a11y:certifiedBy");
+            certifiedByItem.SetAttribute("refines", conformsToRefinesId);
 
-        internal void AddAccessibilityCertifierReport(string certifierReport)
-        {
-            Item accesibilityItem = AddItem(certifierReport);
-            accesibilityItem.SetAttribute("property", "a11y:certifierReport");
-        }
-        
-        internal void AddAccessibilityConformsTo(string conformanceStandard)
-        {
-            Item accesibilityItem = AddItem(conformanceStandard);
-            accesibilityItem.SetAttribute("property", "dcterms:conformsTo");
+            Item certifiedDateItem = AddItem(certificationDate.ToString("yyyy-MM-ddThh:mm:ssZ"));
+            certifiedDateItem.SetAttribute("property", "dcterms:date");
+            certifiedByItem.SetAttribute("refines", certifiedByRefinesId);
+
+            if (!string.IsNullOrWhiteSpace(certifierCredentials))
+            {
+                Item roleItem = AddItem(certifierCredentials);
+                roleItem.SetAttribute("refines", certifiedByRefinesId);
+                roleItem.SetAttribute("property", "a11y:certifierCredential");
+            }
+
+            if (!string.IsNullOrWhiteSpace(certifierReportUri))
+            {
+                Item roleItem = AddItem(null, "link");
+                roleItem.SetAttribute("rel", "a11y:certifierReport");
+                roleItem.SetAttribute("refines", certifiedByRefinesId);
+                roleItem.SetAttribute("href", certifierReportUri);
+            }
         }
 
         internal void AddCreator(string name, string role)

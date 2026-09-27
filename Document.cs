@@ -131,32 +131,19 @@ namespace net.vieapps.Components.Utility.Epub
             => this._metadata.AddAccessibilityProperty(name, values);
 
         /// <summary>
-        /// Who has provided the accessibility certification.
+        /// Add details of accessibility conformance and certifier identity.
         /// </summary>
+        /// <param name="conformsTo">A string representation of the conformance standards this document complies with</param>
         /// <param name="certifiedBy">A string containing the accessibility certifier's name</param>
-        public void AddAccessibilityCertifiedBy(string certifiedBy)
-            => this._metadata.AddAccessibilityCertifiedBy(certifiedBy);
-
-        /// <summary>
-        /// Credentials of the accessibility certification provider.
-        /// </summary>
-        /// <param name="certifierCredential">A string representation of the accessibility certification provider's credentials</param>
-        public void AddAccessibilityCertifierCredential(string certifierCredential)
-            => this._metadata.AddAccessibilityCertifierReport(certifierCredential);
-
-        /// <summary>
-        /// Certifier's accessibility report.
-        /// </summary>
-        /// <param name="certifierReport">A reference to the certifier report</param>
-        public void AddAccessibilityCertifierReport(string certifierReport)
-            => this._metadata.AddAccessibilityCertifierReport(certifierReport);
-
-        /// <summary>
-        /// Standard with which this document conforms.
-        /// </summary>
-        /// <param name="conformanceStandard">A string representation of the conformance standard</param>
-        public void AddAccessibilityConformsTo(string conformanceStandard)
-            => this._metadata.AddAccessibilityConformsTo(conformanceStandard);
+        /// <param name="certificationDate"></param>
+        /// <param name="certifierCredentials">A string representation of the accessibility certification provider's credentials</param>
+        /// <param name="certifierReportUri">A URI reference to the certifier report</param>
+        void AddAccessibilityCertification(string conformsTo,
+            string certifiedBy,
+            DateTime certificationDate,
+            string certifierCredentials = null,
+            string certifierReportUri = null)
+            => this._metadata.AddAccessibilityCertification(conformsTo, certifiedBy, certificationDate, certifierCredentials, certifierReportUri);
 
         /// <summary>
         /// Add author of the document
