@@ -151,9 +151,11 @@ namespace net.vieapps.Components.Utility.Epub
         /// Add author of the document
         /// </summary>
         /// <param name="author">Human-readable full name</param>
-        public void AddAuthor(string author)
+        /// <param name="homepageUri">Optional URI for the contributor's homepage</param>
+        /// <param name="homepageMimeType">MIME type of the URI, defaults to "application/html"</param>
+        public void AddAuthor(string author, string homepageUri = null, string homepageMimeType = "application/html")
 		{
-			this._metadata.AddAuthor(author);
+			this._metadata.AddAuthor(author, homepageUri, homepageMimeType);
 			this._ncx.AddAuthor(author);
 		}
 
@@ -167,27 +169,33 @@ namespace net.vieapps.Components.Utility.Epub
 			this._ncx.AddTitle(title);
 		}
 
-		/// <summary>
-		/// Add publisher to epub document
-		/// </summary>
-		/// <param name="publisher">document's publisher</param>
-		public void AddPublisher(string publisher)
-			=> this._metadata.AddPublisher(publisher);
+        /// <summary>
+        /// Add publisher to epub document
+        /// </summary>
+        /// <param name="publisher">document's publisher</param>
+        /// <param name="homepageUri">Optional URI for the contributor's homepage</param>
+        /// <param name="homepageMimeType">MIME type of the URI, defaults to "application/html"</param>
+        public void AddPublisher(string publisher, string homepageUri = null, string homepageMimeType = "application/html")
+			=> this._metadata.AddPublisher(publisher, homepageUri, homepageMimeType);
 
-		/// <summary>
-		/// Add document translator
-		/// </summary>
-		/// <param name="name">Human-readable full name</param>
-		public void AddTranslator(string name)
-			=> this._metadata.AddTranslator(name);
+        /// <summary>
+        /// Add document translator
+        /// </summary>
+        /// <param name="name">Human-readable full name</param>
+        /// <param name="homepageUri">Optional URI for the contributor's homepage</param>
+        /// <param name="homepageMimeType">MIME type of the URI, defaults to "application/html"</param>
+        public void AddTranslator(string name, string homepageUri = null, string homepageMimeType = "application/html")
+			=> this._metadata.AddTranslator(name, homepageUri, homepageMimeType);
 
         /// <summary>
         /// Add creator of content within the document
         /// </summary>
         /// <param name="name">Human-readable full name</param>
         /// <param name="role">Role code from the MARC Code List for Creators</param>
-        public void AddCreator(string name, string role)
-            => this._metadata.AddCreator(name, role);
+        /// <param name="homepageUri">Optional URI for the contributor's homepage</param>
+        /// <param name="homepageMimeType">MIME type of the URI, defaults to "application/html"</param>
+        public void AddCreator(string name, string role, string homepageUri = null, string homepageMimeType = "application/html")
+            => this._metadata.AddCreator(name, role, homepageUri, homepageMimeType);
 
         /// <summary>
         /// Add document contributor
@@ -201,7 +209,9 @@ namespace net.vieapps.Components.Utility.Epub
         /// </summary>
         /// <param name="name">Human-readable full name</param>
         /// <param name="role">Role code from the MARC Code List for Creators</param>
-        public void AddContributor(string name, string role)
+        /// <param name="homepageUri">Optional URI for the contributor's homepage</param>
+        /// <param name="homepageMimeType">MIME type of the URI, defaults to "application/html"</param>
+        public void AddContributor(string name, string role, string homepageUri = null, string homepageMimeType = "application/html")
             => this._metadata.AddContributor(name, role);
 
         /// <summary>
@@ -219,7 +229,7 @@ namespace net.vieapps.Components.Utility.Epub
 			=> this._metadata.AddDescription(description);
 
         /// <summary>
-        /// Add teh series this work belongs to, as well as it's position in that series.
+        /// Add the series this work belongs to, as well as it's position in that series.
         /// </summary>
         /// <param name="seriesName">The name of the series, as it should be displayed</param>
         /// <param name="positionInSeries">The position in the series as an integer, or series if decimal separated numbers (e.g. 1 or 2.2.1)</param>
@@ -858,7 +868,12 @@ namespace net.vieapps.Components.Utility.Epub
 
         void WriteOpf(string opfFilePath)
 		{
-			var packageElement = new XElement(Document.OpfNS + "package", new XAttribute("version", "3.0"), new XAttribute("unique-identifier", "BookId"), new XAttribute(XNamespace.Xml + "lang", "en"));
+			var packageElement = new XElement(Document.OpfNS + "package",
+                new XAttribute("version", "3.0"),
+                new XAttribute("unique-identifier", "BookId"),
+                new XAttribute(XNamespace.Xml + "lang", "en"),
+                new XAttribute("prefix", "foaf: http://xmlns.com/foaf/spec/")
+                );
 			packageElement.Add(this._metadata.ToElement());
 			packageElement.Add(this._manifest.ToElement());
 			packageElement.Add(this._spine.ToElement());

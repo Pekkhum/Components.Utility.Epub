@@ -105,7 +105,7 @@ namespace net.vieapps.Components.Utility.Epub
             DateTime certificationDate,
             string certifierCredentials = null,
             string certifierReportUri = null,
-            string certifierReportMimeType = "text/html")
+            string certifierReportMimeType = "application/html")
         {
             Item conformsToItem = AddItem(conformsTo);
             conformsToItem.SetAttribute("property", "dcterms:conformsTo");
@@ -137,36 +137,9 @@ namespace net.vieapps.Components.Utility.Epub
             }
         }
 
-        internal void AddCreator(string name, string role)
-		{
-            Item creatorItem = AddItem(name, Document.DcNS + "creator");
-            string refinesId = "#" + creatorItem.GetAttribute("id");
-
-			if (!string.IsNullOrWhiteSpace(role))
-            {
-                Item roleItem = AddItem(role);
-                roleItem.SetAttribute("refines", refinesId);
-                roleItem.SetAttribute("property", "role");
-                roleItem.SetAttribute("scheme", "marc:relators");
-            }
-        }
-
-		internal void AddCreator(string name)
-			=> AddCreator(name, null);
-
-
-        internal void AddAuthor(string name) 
-			=> this.AddCreator(name, "aut");
-
-        internal void AddTranslator(string name)
-            => this.AddCreator(name, "trl");
-
-        internal void AddArtist(string name)
-            => this.AddCreator(name, "art");
-
-        internal void AddContributor(string name, string role)
+        internal void AddCreatorContributor(XName tagName, string contributorName, string role, string homepageUri = null, string homepageMimeType = "application/html")
         {
-            Item creatorItem = AddItem(name, Document.DcNS + "contributor");
+            Item creatorItem = AddItem(contributorName, tagName);
             string refinesId = "#" + creatorItem.GetAttribute("id");
 
             if (!string.IsNullOrWhiteSpace(role))
@@ -176,7 +149,35 @@ namespace net.vieapps.Components.Utility.Epub
                 roleItem.SetAttribute("property", "role");
                 roleItem.SetAttribute("scheme", "marc:relators");
             }
+
+            if (!string.IsNullOrWhiteSpace(homepageUri))
+            {
+                Item homepageUriItem = AddItem(null, Document.OpfNS + "link");
+                homepageUriItem.SetAttribute("rel", "foaf:homepage");
+                homepageUriItem.SetAttribute("refines", refinesId);
+                homepageUriItem.SetAttribute("href", homepageUri);
+                homepageUriItem.SetAttribute("media-type", homepageMimeType);
+            }
         }
+
+        internal void AddCreator(string creatorName, string role, string homepageUri = null, string homepageMimeType = "application/html")
+            => AddCreatorContributor(Document.DcNS + "creator", creatorName, role, homepageUri, homepageMimeType);
+
+		internal void AddCreator(string name, string homepageUri = null, string homepageMimeType = "application/html")
+			=> AddCreator(name, null, homepageUri, homepageMimeType);
+
+
+        internal void AddAuthor(string name, string homepageUri = null, string homepageMimeType = "application/html") 
+			=> this.AddCreator(name, "aut", homepageUri, homepageMimeType);
+
+        internal void AddTranslator(string name, string homepageUri = null, string homepageMimeType = "application/html")
+            => this.AddCreator(name, "trl", homepageUri, homepageMimeType);
+
+        internal void AddArtist(string name, string homepageUri = null, string homepageMimeType = "application/html")
+            => this.AddCreator(name, "art", homepageUri, homepageMimeType);
+
+        internal void AddContributor(string contributorName, string role, string homepageUri = null, string homepageMimeType = "application/html")
+            => AddCreatorContributor(Document.DcNS + "contributor", contributorName, role, homepageUri, homepageMimeType);
 
         internal void AddContributor(string name)
 			=> AddContributor(name, null);
@@ -223,8 +224,20 @@ namespace net.vieapps.Components.Utility.Epub
         internal void AddTitle(string title)
             => AddItem(title, Document.DcNS + "title");
 
-        internal void AddPublisher(string publisher)
-            => AddItem(publisher, Document.DcNS + "publisher");
+        internal void AddPublisher(string publisher, string homepageUri = null, string homepageMimeType = "application/html")
+        {
+            Item pubItem = AddItem(publisher, Document.DcNS + "publisher");
+            string refinesId = "#" + pubItem.GetAttribute("id");
+
+            if (!string.IsNullOrWhiteSpace(homepageUri))
+            {
+                Item homepageUriItem = AddItem(null, Document.OpfNS + "link");
+                homepageUriItem.SetAttribute("rel", "foaf:homepage");
+                homepageUriItem.SetAttribute("refines", refinesId);
+                homepageUriItem.SetAttribute("href", homepageUri);
+                homepageUriItem.SetAttribute("media-type", homepageMimeType);
+            }
+        }
 
         internal void AddBookIdentifier(string id, string uuid, string scheme)
         {
