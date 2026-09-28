@@ -215,11 +215,13 @@ namespace net.vieapps.Components.Utility.Epub
             => this._metadata.AddContributor(name, role);
 
         /// <summary>
-        /// Add document subject: phrase or list of keywords
+        /// Add document subject: phrase or list of keywords, which may include a term from a specified authority's subject list.
         /// </summary>
         /// <param name="subject">Document's subject</param>
-        public void AddSubject(string subject)
-			=> this._metadata.AddSubject(subject);
+        /// <param name="authority">The scheme from which the following term is derived</param>
+        /// <param name="term">A subject term derived from the scheme mentioned in the authority property</param>
+        public void AddSubject(string subject, string authority = null, string term = null)
+			=> this._metadata.AddSubject(subject, authority, term);
 
 		/// <summary>
 		/// Add description of document's content

@@ -187,18 +187,14 @@ namespace net.vieapps.Components.Utility.Epub
             Item creatorItem = AddItem(subject, Document.DcNS + "subject");
             string refinesId = "#" + creatorItem.GetAttribute("id");
 
-            if (!string.IsNullOrWhiteSpace(authority))
+            if (!string.IsNullOrWhiteSpace(authority) && !string.IsNullOrWhiteSpace(term))
             {
-                Item roleItem = AddItem(authority);
-                roleItem.SetAttribute("refines", refinesId);
-                roleItem.SetAttribute("property", "authority");
-            }
-
-            if (!string.IsNullOrWhiteSpace(term))
-            {
-                Item roleItem = AddItem(term);
-                roleItem.SetAttribute("refines", refinesId);
-                roleItem.SetAttribute("property", "term");
+                Item authorityItem = AddItem(authority);
+                authorityItem.SetAttribute("refines", refinesId);
+                authorityItem.SetAttribute("property", "authority");
+                Item termItem = AddItem(term);
+                termItem.SetAttribute("refines", refinesId);
+                termItem.SetAttribute("property", "term");
             }
         }
 
