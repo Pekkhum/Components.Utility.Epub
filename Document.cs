@@ -148,6 +148,19 @@ namespace net.vieapps.Components.Utility.Epub
             => this._metadata.AddAccessibilityCertification(conformsTo, certifiedBy, certificationDate, certifierCredentials, certifierReportUri, certifierReportMimeType);
 
         /// <summary>
+        /// Adds a creator or contributor to the metadata as specified in the supplied CreatorData object.
+        /// </summary>
+        /// <param name="cDat">An object representing the creator or contributor to add.</param>
+        public void AddCreatorData(CreatorData cDat)
+        {
+            this._metadata.AddCreatorData(cDat);
+            if(!string.IsNullOrWhiteSpace(cDat.Name) && cDat.Role == "aut")
+            {
+                this._ncx.AddAuthor(cDat.Name);
+            }
+        }
+
+        /// <summary>
         /// Add author of the document
         /// </summary>
         /// <param name="author">Human-readable full name</param>

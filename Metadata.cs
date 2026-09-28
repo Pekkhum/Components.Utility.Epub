@@ -7,6 +7,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.Linq;
+using static net.vieapps.Components.Utility.Epub.CreatorData;
 #endregion
 
 namespace net.vieapps.Components.Utility.Epub
@@ -137,31 +138,78 @@ namespace net.vieapps.Components.Utility.Epub
             }
         }
 
-        internal void AddCreatorContributor(XName tagName, string contributorName, string role, string homepageUri = null, string homepageMimeType = "application/html")
+        internal void AddCreatorData(CreatorData cDat)
         {
-            Item creatorItem = AddItem(contributorName, tagName);
-            string refinesId = "#" + creatorItem.GetAttribute("id");
-
-            if (!string.IsNullOrWhiteSpace(role))
+            if(string.IsNullOrWhiteSpace(cDat.Name))
             {
-                Item roleItem = AddItem(role);
-                roleItem.SetAttribute("refines", refinesId);
-                roleItem.SetAttribute("property", "role");
-                roleItem.SetAttribute("scheme", "marc:relators");
+                new ArgumentException(cDat.Kind.ToString() + " cannot be added to metadata without a name.");
             }
 
-            if (!string.IsNullOrWhiteSpace(homepageUri))
+            Item creatorItem = AddItem(cDat.Name, Document.DcNS + (cDat.Kind == CreatorData.CreatorKind.Creator ? "creator" : "contributor"));
+            if(!string.IsNullOrWhiteSpace(cDat.Id))
+            {
+                creatorItem.SetAttribute("id", cDat.Id);
+            }
+            string refinesId = "#" + creatorItem.GetAttribute("id");
+
+
+            if (!string.IsNullOrWhiteSpace(cDat.Lang))
+            {
+                creatorItem.SetAttribute(XNamespace.Xml + "lang", cDat.Lang);
+            }
+
+            if (!string.IsNullOrWhiteSpace(cDat.Role))
+            {
+                Item roleItem = AddItem(cDat.Role);
+                roleItem.SetAttribute("refines", refinesId);
+                roleItem.SetAttribute("property", "role");
+                roleItem.SetAttribute("scheme",
+                    (string.IsNullOrWhiteSpace(cDat.RoleScheme) ? "marc:relators" : cDat.RoleScheme));
+            }
+
+            if (!string.IsNullOrWhiteSpace(cDat.HomepageUri))
             {
                 Item homepageUriItem = AddItem(null, Document.OpfNS + "link");
                 homepageUriItem.SetAttribute("rel", "foaf:homepage");
                 homepageUriItem.SetAttribute("refines", refinesId);
-                homepageUriItem.SetAttribute("href", homepageUri);
-                homepageUriItem.SetAttribute("media-type", homepageMimeType);
+                homepageUriItem.SetAttribute("href", cDat.HomepageUri);
+                homepageUriItem.SetAttribute("media-type",
+                    (string.IsNullOrWhiteSpace(cDat.HomepageMimeType) ? "application/html" : cDat.HomepageMimeType));
+            }
+
+            if (!string.IsNullOrWhiteSpace(cDat.FileAs))
+            {
+                Item fileAsItem = AddItem(cDat.FileAs);
+                fileAsItem.SetAttribute("refines", refinesId);
+                fileAsItem.SetAttribute("property", "file-as");
+            }
+
+            List<NameLangPair> altScr = cDat.GetAlternateScripts();
+            foreach (NameLangPair nameLangPair in altScr)
+            {
+                if(!string.IsNullOrWhiteSpace(nameLangPair.Name)
+                    && !string.IsNullOrWhiteSpace(nameLangPair.Lang))
+                {
+                    Item altScrItem = AddItem(nameLangPair.Name);
+                    altScrItem.SetAttribute("refines", refinesId);
+                    altScrItem.SetAttribute("property", "alternate-script");
+                    altScrItem.SetAttribute(XNamespace.Xml + "lang", nameLangPair.Lang);
+                }
             }
         }
 
+        internal void AddCreatorContributor(CreatorData.CreatorKind creatorKind, string contributorName, string role, string homepageUri = null, string homepageMimeType = "application/html")
+        {
+            CreatorData cDat = new CreatorData(creatorKind, contributorName, role)
+            {
+                HomepageUri = homepageUri,
+                HomepageMimeType = homepageMimeType
+            };
+            AddCreatorData(cDat);
+        }
+
         internal void AddCreator(string creatorName, string role, string homepageUri = null, string homepageMimeType = "application/html")
-            => AddCreatorContributor(Document.DcNS + "creator", creatorName, role, homepageUri, homepageMimeType);
+            => AddCreatorContributor(CreatorData.CreatorKind.Creator, creatorName, role, homepageUri, homepageMimeType);
 
 		internal void AddCreator(string name, string homepageUri = null, string homepageMimeType = "application/html")
 			=> AddCreator(name, null, homepageUri, homepageMimeType);
@@ -177,7 +225,7 @@ namespace net.vieapps.Components.Utility.Epub
             => this.AddCreator(name, "art", homepageUri, homepageMimeType);
 
         internal void AddContributor(string contributorName, string role, string homepageUri = null, string homepageMimeType = "application/html")
-            => AddCreatorContributor(Document.DcNS + "contributor", contributorName, role, homepageUri, homepageMimeType);
+            => AddCreatorContributor(CreatorData.CreatorKind.Contributor, contributorName, role, homepageUri, homepageMimeType);
 
         internal void AddContributor(string name)
 			=> AddContributor(name, null);
