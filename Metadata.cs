@@ -57,7 +57,9 @@ namespace net.vieapps.Components.Utility.Epub
         private static readonly XName opfMeta = Document.OpfNS + "meta";
         internal readonly Document currentDoc;
         internal readonly Dictionary<string, int> _ids = new Dictionary<string, int>();
-		readonly List<Item> _items = new List<Item>();
+		internal readonly List<Item> _items = new List<Item>();
+        internal string primaryBookIdentifierId;
+        internal bool hasModifiedDateTime = false;
 
         internal Metadata(Document doc)
         {
@@ -283,36 +285,54 @@ namespace net.vieapps.Components.Utility.Epub
             }
         }
 
-        internal void AddBookIdentifier(string id, string uuid, string scheme)
+        internal void AddBookIdentifier(string id, string uuid, string type, string scheme, bool isPrimaryId = false)
         {
-            Item creatorItem = AddItem(uuid, Document.DcNS + "identifier");
-            string refinesId = "#";
-            if (!string.IsNullOrWhiteSpace(id))
+            if (isPrimaryId && !string.IsNullOrWhiteSpace(primaryBookIdentifierId))
             {
-                creatorItem.SetAttribute("id", id);
-                refinesId += id;
-            } else
-            {
-                refinesId += creatorItem.GetAttribute("id");
+                throw new ArgumentException("Primary Book Identifier has already been set!");
             }
 
-            if (!string.IsNullOrWhiteSpace(scheme))
+            Item bookIdItem = AddItem(uuid, Document.DcNS + "identifier");
+            string bookIdId;
+            if (string.IsNullOrWhiteSpace(id))
             {
-                Item roleItem = AddItem(scheme);
+                bookIdId = bookIdItem.GetAttribute("id");
+            } else
+            {
+                bookIdItem.SetAttribute("id", id);
+                bookIdId = id;
+            }
+            string refinesId = "#" + bookIdId;
+            if (isPrimaryId)
+            {
+                primaryBookIdentifierId = bookIdId;
+            }
+
+            if (!string.IsNullOrWhiteSpace(type) && !string.IsNullOrWhiteSpace(scheme))
+            {
+                Item roleItem = AddItem(type);
                 roleItem.SetAttribute("refines", refinesId);
                 roleItem.SetAttribute("property", "identifier-type");
+                roleItem.SetAttribute("scheme", "scheme");
             }
 		}
 
-		internal void AddBookIdentifier(string id, string uuid)
-			=> this.AddBookIdentifier(id, uuid, string.Empty);
-        internal void AddBookIdentifier(string uuid)
-            => AddBookIdentifier(string.Empty, uuid, string.Empty);
+		internal void AddBookIdentifier(string id, string uuid, bool isPrimaryId = false)
+			=> this.AddBookIdentifier(id, uuid, string.Empty, string.Empty, isPrimaryId);
+        internal void AddBookIdentifier(string uuid, bool isPrimaryId = false)
+            => AddBookIdentifier(string.Empty, uuid, string.Empty, string.Empty, isPrimaryId);
+        internal void AddBookIdentifier(string uuid, string type, string scheme, bool isPrimaryId = false)
+            => AddBookIdentifier(string.Empty, uuid, type, scheme, isPrimaryId);
 
         internal void AddModifiedDateTime(DateTime dt)
         {
+            if (hasModifiedDateTime)
+            {
+                throw new ArgumentException("Modified Date/Time has already been set!");
+            }
             Item modItem = AddItem(dt.ToString(iso8601_1FormatString));
             modItem.SetAttribute("property", "dcterms:modified");
+            hasModifiedDateTime = true;
         }
         internal void AddModifiedDateTime()
             => AddModifiedDateTime(DateTime.UtcNow);

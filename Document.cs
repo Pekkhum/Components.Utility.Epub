@@ -55,11 +55,6 @@ namespace net.vieapps.Components.Utility.Epub
 			this._manifest.AddItem("ncx", "toc.ncx", "application/x-dtbncx+xml");
 			this._spine.SetToc("ncx");
 			this._container.AddRootFile("OPF/content.opf", "application/oebps-package+xml");
-
-			var uuid = $"urn:uuid:{Guid.NewGuid()}";
-			this._ncx.SetUid(uuid);
-			this._metadata.AddBookIdentifier("BookId", uuid);
-            this._metadata.AddModifiedDateTime();
 		}
 
 		/// <summary>
@@ -299,24 +294,61 @@ namespace net.vieapps.Components.Utility.Epub
         /// <summary>
         /// Add book identifier
         /// </summary>
-        /// <param name="id">A string or number used to uniquely identify the resource</param>
-        public void AddBookIdentifier(string id)
-			=> this.AddBookIdentifier(id, string.Empty);
+        /// <param name="bookId">A string or number used to uniquely identify the resulting EPUB publication.</param>
+        /// <param name="isPrimaryId">Defaults to false; Specifies whether this should be the primary identifier for this EPUB file.
+        /// Only one primary ID may be specified and if none is specified a UUID will be assigned at generation.</param>
+        public void AddBookIdentifier(string bookId, bool isPrimaryId = false)
+            => this.AddBookIdentifier(string.Empty, bookId, string.Empty, string.Empty, isPrimaryId);
 
-		/// <summary>
-		/// Add book identifier
-		/// </summary>
-		/// <param name="id">A string or number used to uniquely identify the resource</param>
-		/// <param name="scheme">System or authority that generated or assigned the id parameter, for example "ISBN" or "DOI." </param>
-		public void AddBookIdentifier(string id, string scheme)
-			=> this._metadata.AddBookIdentifier(GetNextID("id"), id, scheme);
+        /// <summary>
+        /// Add book identifier
+        /// </summary>
+        /// <param name="xmlElementId">A string or number used to uniquely identify the XML element of this book identifier listing.</param>
+        /// <param name="bookId">A string or number used to uniquely identify the resulting EPUB publication.</param>
+        /// <param name="isPrimaryId">Defaults to false; Specifies whether this should be the primary identifier for this EPUB file.
+        /// Only one primary ID may be specified and if none is specified a UUID will be assigned at generation.</param>
+        public void AddBookIdentifier(string xmlElementId, string bookId, bool isPrimaryId = false)
+            => this.AddBookIdentifier(xmlElementId, bookId, string.Empty, string.Empty, isPrimaryId);
 
-		/// <summary>
-		/// Add generic metadata
-		/// </summary>
-		/// <param name="name">meta element name</param>
-		/// <param name="value">meta element value</param>
-		public void AddMetaItem(string name, string value)
+        /// <summary>
+        /// Add book identifier
+        /// </summary>
+        /// <param name="bookId">A string or number used to uniquely identify the resulting EPUB publication.</param>
+        /// <param name="type">The type of identifier, within the following specified scheme.</param>
+        /// <param name="scheme">System or authority that generated or assigned the id parameter, for example "ISBN" or "DOI."</param>
+        /// <param name="isPrimaryId">Defaults to false; Specifies whether this should be the primary identifier for this EPUB file.
+        /// Only one primary ID may be specified and if none is specified a UUID will be assigned at generation.</param>
+        public void AddBookIdentifier(string bookId, string type, string scheme, bool isPrimaryId = false)
+            => this.AddBookIdentifier(string.Empty, bookId, type, scheme, isPrimaryId);
+
+        /// <summary>
+        /// Add book identifier
+        /// </summary>
+        /// <param name="xmlElementId">A string or number used to uniquely identify the XML element of this book identifier listing.</param>
+        /// <param name="bookId">A string or number used to uniquely identify the resulting EPUB publication.</param>
+        /// <param name="type">The type of identifier, within the following specified scheme.</param>
+        /// <param name="scheme">System or authority that generated or assigned the id parameter, for example "ISBN" or "DOI."</param>
+        /// <param name="isPrimaryId">Defaults to false; Specifies whether this should be the primary identifier for this EPUB file.
+        /// Only one primary ID may be specified and if none is specified a UUID will be assigned at generation.</param>
+        public void AddBookIdentifier(string xmlElementId, string bookId, string type, string scheme, bool isPrimaryId = false)
+        {
+            if (string.IsNullOrWhiteSpace(bookId))
+            {
+                throw new ArgumentException("Argument 'bookId' cannot be null or blank!");
+            }
+            this._metadata.AddBookIdentifier(xmlElementId, bookId, type, scheme, isPrimaryId);
+            if(isPrimaryId)
+            {
+                this._ncx.SetUid(bookId);
+            }
+        }
+
+        /// <summary>
+        /// Add generic metadata
+        /// </summary>
+        /// <param name="name">meta element name</param>
+        /// <param name="value">meta element value</param>
+        public void AddMetaItem(string name, string value)
 			=> this._metadata.AddItem(value, name);
 
 		/// <summary>
@@ -883,9 +915,19 @@ namespace net.vieapps.Components.Utility.Epub
 
         void WriteOpf(string opfFilePath)
 		{
-			var packageElement = new XElement(Document.OpfNS + "package",
+            if(string.IsNullOrWhiteSpace(this._metadata.primaryBookIdentifierId))
+            {
+                var uuid = $"urn:uuid:{Guid.NewGuid()}";
+                this.AddBookIdentifier("BookId", uuid, string.Empty, string.Empty, true);
+            }
+            if (!this._metadata.hasModifiedDateTime)
+            {
+                this._metadata.AddModifiedDateTime();
+            }
+
+            var packageElement = new XElement(Document.OpfNS + "package",
                 new XAttribute("version", "3.0"),
-                new XAttribute("unique-identifier", "BookId"),
+                new XAttribute("unique-identifier", this._metadata.primaryBookIdentifierId),
                 new XAttribute(XNamespace.Xml + "lang", "en"),
                 new XAttribute("prefix", "foaf: http://xmlns.com/foaf/spec/")
                 );
